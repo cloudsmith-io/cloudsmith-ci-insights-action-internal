@@ -1,5 +1,6 @@
 import pytest
-from package_insights.package_insights import parse_logs_for_all_details
+from package_insights.package_insights.utils import parse_logs_for_all_details
+from package_insights.package_insights.parsers import PythonPipParser, NpmParser
 import importlib
 
 
@@ -7,8 +8,7 @@ class TestPythonLogParsing:
     @pytest.fixture(autouse=True)
     def only_python_parser(self, monkeypatch):
         # Restrict PARSERS to only the Python parser for these tests
-        module = importlib.import_module("package_insights.package_insights")
-        PythonPipParser = getattr(module, "PythonPipParser")
+        module = importlib.import_module("package_insights.package_insights.parsers")
         monkeypatch.setattr(module, "PARSERS", [PythonPipParser()])
 
     @pytest.mark.parametrize(
@@ -84,8 +84,7 @@ class TestNpmLogParsing:
     @pytest.fixture(autouse=True)
     def only_npm_parser(self, monkeypatch):
         # Restrict PARSERS to only the Npm parser for these tests
-        module = importlib.import_module("package_insights.package_insights")
-        NpmParser = getattr(module, "NpmParser")
+        module = importlib.import_module("package_insights.package_insights.parsers")
         monkeypatch.setattr(module, "PARSERS", [NpmParser()])
 
     def test_parse_npm_signed_fetch_lines(self):

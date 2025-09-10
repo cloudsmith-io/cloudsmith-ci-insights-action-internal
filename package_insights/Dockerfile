@@ -2,8 +2,11 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-COPY package_insights.py ./
+# Copy the entire package structure
+COPY package_insights/ ./package_insights/
 COPY requirements.txt ./
+COPY package_insights_launcher.py ./
+
 RUN pip install --no-cache-dir -r requirements.txt
 
-ENTRYPOINT ["python", "/app/package_insights.py"]
+ENTRYPOINT ["python", "/app/package_insights_launcher.py"]

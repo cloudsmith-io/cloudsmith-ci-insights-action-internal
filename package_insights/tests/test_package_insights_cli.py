@@ -5,10 +5,10 @@ import pytest
 from click.testing import CliRunner
 
 import importlib
-from package_insights.package_insights import package_insights  # click Command object
+from package_insights.package_insights.cli import package_insights  # click Command object
 
-# Retrieve the real module object (the package's __init__ exports a symbol with same name)
-package_insights_module = importlib.import_module("package_insights.package_insights")
+# Retrieve the utils module object (where requests is used)
+utils_module = importlib.import_module("package_insights.package_insights.utils")
 
 
 class _MockResponse:
@@ -52,7 +52,7 @@ def test_cli_non_403_log_exits_gracefully(runner, monkeypatch):
         raise AssertionError("No HTTP calls expected for non-403 log")
 
     # Not strictly needed; no HTTP calls expected. Kept for consistency.
-    monkeypatch.setattr(package_insights_module.requests, "get", fake_get)
+    monkeypatch.setattr(utils_module.requests, "get", fake_get)
 
     # No 403 => early informational return, exit code 0
     result = runner.invoke(package_insights, ["log with no forbidden status"])
@@ -68,7 +68,7 @@ def test_cli_parse_error_exit_code_2(runner, monkeypatch):
     def fake_get(url, headers=None):  # pragma: no cover - shouldn't be reached due to parse failure
         raise AssertionError("Should not perform HTTP requests when parse fails")
 
-    monkeypatch.setattr(package_insights_module.requests, "get", fake_get)
+    monkeypatch.setattr(utils_module.requests, "get", fake_get)
     result = runner.invoke(package_insights, [log_text])
     assert result.exit_code == 2
     assert "Unable to parse package details" in result.output
@@ -85,7 +85,7 @@ def test_cli_package_not_found(runner, monkeypatch):
         payload = [_build_package("other", "9.9.9", False)]
         return _MockResponse(payload, headers={"x-pagination-pagetotal": "1"})
 
-    monkeypatch.setattr(package_insights_module.requests, "get", fake_get)
+    monkeypatch.setattr(utils_module.requests, "get", fake_get)
     result = runner.invoke(package_insights, [log_text])
     assert "Package not found: mypkg==1.0.0" in result.output
 
@@ -104,7 +104,7 @@ def test_cli_blocked_package_success(runner, monkeypatch):
             return _MockResponse({"results": []}, headers={"x-pagination-pagetotal": "1"})
         raise AssertionError(f"Unexpected URL {url}")
 
-    monkeypatch.setattr(package_insights_module.requests, "get", fake_get)
+    monkeypatch.setattr(utils_module.requests, "get", fake_get)
     result = runner.invoke(package_insights, [log_text, "--follow-up", "Investigate policies"])
     assert result.exit_code == 0
     assert "Likely Blocked" in result.output
@@ -140,7 +140,7 @@ def test_cli_quarantined_package_exit_code_1(runner, monkeypatch):
             return _MockResponse(actions, headers={"x-pagination-pagetotal": "1"})
         raise AssertionError(f"Unexpected URL {url}")
 
-    monkeypatch.setattr(package_insights_module.requests, "get", fake_get)
+    monkeypatch.setattr(utils_module.requests, "get", fake_get)
     result = runner.invoke(package_insights, [log_text])
     assert result.exit_code == 1
     assert "Status: QUARANTINED" in result.output
@@ -161,7 +161,7 @@ def test_cli_quarantined_package_no_policy_match(runner, monkeypatch):
             return _MockResponse({"results": []}, headers={"x-pagination-pagetotal": "1"})
         raise AssertionError(f"Unexpected URL {url}")
 
-    monkeypatch.setattr(package_insights_module.requests, "get", fake_get)
+    monkeypatch.setattr(utils_module.requests, "get", fake_get)
     result = runner.invoke(package_insights, [log_text])
     assert result.exit_code == 1
     assert "Status: QUARANTINED" in result.output
@@ -189,7 +189,7 @@ def test_cli_multiple_blocked_packages(runner, monkeypatch):
             return _MockResponse({"results": []}, headers={"x-pagination-pagetotal": "1"})
         raise AssertionError(f"Unexpected URL {url}")
 
-    monkeypatch.setattr(package_insights_module.requests, "get", fake_get)
+    monkeypatch.setattr(utils_module.requests, "get", fake_get)
     result = runner.invoke(package_insights, [log_text])
     assert result.exit_code == 0
     # Both packages should appear once
@@ -220,7 +220,7 @@ def test_cli_multiple_with_quarantined_reports_all(runner, monkeypatch):
             return _MockResponse(actions, headers={"x-pagination-pagetotal": "1"})
         raise AssertionError(f"Unexpected URL {url}")
 
-    monkeypatch.setattr(package_insights_module.requests, "get", fake_get)
+    monkeypatch.setattr(utils_module.requests, "get", fake_get)
     result = runner.invoke(package_insights, [log_text])
     # exit code 1 due to quarantined package, but both packages should be reported
     assert result.exit_code == 1
@@ -258,7 +258,7 @@ def test_cli_four_packages_second_missing_continues(runner, monkeypatch):
                 ], headers={"x-pagination-pagetotal": "1"})
         raise AssertionError(f"Unexpected URL {url}")
 
-    monkeypatch.setattr(package_insights_module.requests, "get", fake_get)
+    monkeypatch.setattr(utils_module.requests, "get", fake_get)
     result = runner.invoke(package_insights, [log_text])
     # Exit code should be 0 (no quarantined packages) despite one missing
     assert result.exit_code == 0

@@ -14,7 +14,7 @@ inputs:
     required: true
 runs:
   using: 'docker'
-  image: 'Dockerfile'
+  image: 'ghcr.io/cloudsmith-io/cloudsmith-ci-insights-action/package-insights:latest'
   args:
     - ${{ inputs.log }}
     - --follow-up

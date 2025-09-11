@@ -12,6 +12,6 @@ if __name__ == '__main__':
     package_dir = os.path.dirname(os.path.abspath(__file__))
     sys.path.insert(0, package_dir)
     
-    # Import and run the CLI directly
+    # Import and run the CLI directly from the relative path
     from package_insights.cli import package_insights
     package_insights()

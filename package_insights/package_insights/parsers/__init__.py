@@ -5,9 +5,9 @@ This module provides a plugin-style architecture for parsing different package
 manager logs to extract package information when 403 errors occur.
 """
 
-from .base import BaseFormatClientParser
-from .python_pip import PythonPipParser
-from .npm import NpmParser
+from package_insights.parsers.base import BaseFormatClientParser
+from package_insights.parsers.python_pip import PythonPipParser
+from package_insights.parsers.npm import NpmParser
 
 # Registry of all available parsers
 PARSERS = [
@@ -19,5 +19,4 @@ __all__ = [
     "BaseFormatClientParser",
     "PythonPipParser", 
     "NpmParser",
-    "PARSERS",
 ]

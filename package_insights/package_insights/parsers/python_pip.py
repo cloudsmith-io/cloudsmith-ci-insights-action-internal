@@ -1,5 +1,5 @@
 import re
-from .base import BaseFormatClientParser
+from package_insights.parsers import BaseFormatClientParser
 
 
 # Regex for extracting package info from artifact URLs

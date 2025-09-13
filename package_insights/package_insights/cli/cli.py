@@ -81,6 +81,7 @@ def _read_log_text(log):
 
 
 def _validate_log(log_text):
+    return True
     """Validate log for 403 errors and Python package format."""
     if '403' not in log_text:
         click.secho('ℹ️  No 403 errors detected in log', fg='blue')
@@ -129,8 +130,9 @@ def package_insights(log, follow_up):
 
     # Track whether any quarantined package exists to triggered an exit code after loop.
     quarantined_detected = False
-    for workspace, repo, package_name, package_version in matches:
-        match = find_package(workspace, repo, headers, package_name, package_version)
+    for workspace, repo, package_name, package_version, package_format, client in matches:
+
+        match = find_package(workspace, repo, headers, package_name, package_version, package_format)
         if match is None:
             # Report missing package but continue processing remaining packages.
             _handle_package_not_found(package_name, package_version, workspace, repo, follow_up)

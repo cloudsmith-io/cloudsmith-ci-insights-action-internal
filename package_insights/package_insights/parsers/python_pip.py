@@ -50,7 +50,7 @@ class PythonPipParser(BaseFormatClientParser):
             if not nsrp:
                 continue
             workspace, repo = nsrp.groups()
-            yield (workspace, repo, pkg, ver)
+            yield (workspace, repo, pkg, ver, self.package_format)
             matched = True
         if matched:
             return

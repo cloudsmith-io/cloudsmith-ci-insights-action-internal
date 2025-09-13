@@ -43,27 +43,31 @@ class DockerParser(BaseFormatClientParser):
     )
 
     def log_matches_format_and_client(self, log_text: str) -> bool:
+        print("log_matches_format_and_client called")
         """Check if the log contains Docker pull FAILURE indicators from Cloudsmith."""
         # Only match if we have both Cloudsmith registry AND failure indicators
         has_cloudsmith_registry = "docker.cloudsmith.io" in log_text.lower()
         
         failure_indicators = [
+            "error: failed to build",
             "pull access denied",
             "error response from daemon",
             "denied:",
             "403",
-            "401", 
+            "401",
             "404",
             "forbidden",
             "unauthorized",
             "quarantined"
         ]
-        
         has_failure = any(indicator in log_text.lower() for indicator in failure_indicators)
+
+        print(f"has_cloudsmith_registry: {has_cloudsmith_registry}, has_failure: {has_failure}")
         
         return has_cloudsmith_registry and has_failure
 
     def extract(self, log_text: str):
+        print("extract called")
         seen_images = set()
         
         # Strategy 1: Extract from non-BuildKit build failures (FROM + pull access denied)
@@ -74,7 +78,7 @@ class DockerParser(BaseFormatClientParser):
             image_key = (workspace, repo, image_name, tag)
             if image_key not in seen_images:
                 seen_images.add(image_key)
-                yield (workspace, repo, image_name, tag)
+                yield (workspace, repo, image_name, tag, self.package_format)
         
         # Strategy 2: Extract from BuildKit build failures (ERROR: failed to build: failed to solve)
         for match in self.DOCKER_BUILDKIT_BUILD_FAILURE_RE.finditer(log_text):
@@ -84,18 +88,18 @@ class DockerParser(BaseFormatClientParser):
             image_key = (workspace, repo, image_name, tag)
             if image_key not in seen_images:
                 seen_images.add(image_key)
-                yield (workspace, repo, image_name, tag)
+                yield (workspace, repo, image_name, tag, self.package_format)
         
         # Strategy 3: Extract from explicit Docker pull access denied errors
         for match in self.DOCKER_PULL_ACCESS_DENIED_RE.finditer(log_text):
             workspace, repo, image_name = match.groups()
             # Try to find the tag from context
-            tag = self._extract_tag_from_context(log_text, workspace, repo, image_name)
+            tag = self._extract_tag_from_context(log_text, workspace, repo, image_name, self.package_format)
             
             image_key = (workspace, repo, image_name, tag)
             if image_key not in seen_images:
                 seen_images.add(image_key)
-                yield (workspace, repo, image_name, tag)
+                yield (workspace, repo, image_name, tag, self.package_format)
         
         # Strategy 4: Extract from Docker daemon error messages
         for match in self.DOCKER_DAEMON_ERROR_RE.finditer(log_text):
@@ -105,7 +109,7 @@ class DockerParser(BaseFormatClientParser):
             image_key = (workspace, repo, image_name, tag)
             if image_key not in seen_images:
                 seen_images.add(image_key)
-                yield (workspace, repo, image_name, tag)
+                yield (workspace, repo, image_name, tag, self.package_format)
 
     def _extract_tag_from_context(self, log_text: str, workspace: str, repo: str, image_name: str) -> str:
         """Try to extract the tag from the surrounding context in the log."""

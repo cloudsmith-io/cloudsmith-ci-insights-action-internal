@@ -67,21 +67,21 @@ class NpmParser(BaseFormatClientParser):
             for m in pattern.finditer(log_text):
                 groups = m.groups()
                 if pattern in [self.NPM_HTTP_403_RE, self.NPM_ERR_403_RE]:
-                    # These patterns capture (full_url, workspace, repo, pkg, ver)
+                    # These patterns capture (full_url, workspace, repo, pkg, ver, self.package_format)
                     full_url, workspace, repo, pkg, ver = groups
-                    yield (workspace, repo, pkg, ver)
+                    yield (workspace, repo, pkg, ver, self.package_format)
                 elif pattern in [self.NPM_HTTP_403_SCOPED_RE, self.NPM_ERR_403_SCOPED_RE]:
-                    # These patterns capture (full_url, workspace, repo, scoped_pkg, pkg_name, ver)
+                    # These patterns capture (full_url, workspace, repo, scoped_pkg, pkg_name, ver, self.package_format)
                     full_url, workspace, repo, scoped_pkg, pkg_name, ver = groups
-                    yield (workspace, repo, scoped_pkg, ver)
+                    yield (workspace, repo, scoped_pkg, ver, self.package_format)
                 else:
-                    # Original patterns capture (full_url, pkg, ver)
+                    # Original patterns capture (full_url, pkg, ver, self.package_format)
                     full_url, pkg, ver = groups
                     ws_repo = self.WORKSPACE_REPO_FROM_URL_RE.search(full_url)
                     if not ws_repo:
                         continue
                     workspace, repo = ws_repo.groups()
-                    yield (workspace, repo, pkg, ver)
+                    yield (workspace, repo, pkg, ver, self.package_format)
                 matched = True
         if matched:
             return

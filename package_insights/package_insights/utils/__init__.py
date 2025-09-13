@@ -123,16 +123,20 @@ def parse_package_entry(entry: str):
     return entry, None
 
 
-def find_package(workspace: str, repo: str, headers: dict, name: str, version: Optional[str]):
+def find_package(workspace: str, repo: str, headers: dict, name: str, version: Optional[str], package_format: str):
     """Locate a package using Cloudsmith packages API."""
 
     base_url = f"https://api.cloudsmith.io/packages/{workspace}/{repo}/"
-    
-    query_term = name if not version else f"name:{name} AND version:{version}"
+
+    if package_format == "docker":
+        query_term = name if not version else f"name:{name} AND version:{version}"
+    else:
+        query_term = f"name:{name}"
     page = 1
     total_pages = None
     while True:
         url = f"{base_url}?sort=-date&query={_urlquote(query_term)}&page={page}"
+        print(url)
         resp = requests.get(url, headers=headers)
         if resp.status_code != 200:
             click.secho(
@@ -153,6 +157,10 @@ def find_package(workspace: str, repo: str, headers: dict, name: str, version: O
             packages_iter = packages
 
         for pkg in packages_iter:
+            print(pkg["tags"])
+            if package_format == "docker":
+                if version in pkg["tags"]["version"]:
+                    return pkg
             if pkg.get('display_name') == name and (version is None or pkg.get('version') == version):
                 return pkg
 
@@ -213,6 +221,7 @@ def parse_logs_for_all_details(log_text: str, unique: bool = True):
     from ..parsers import PARSERS
     
     for parser in PARSERS:
+        print(f"Trying parser: {parser.__class__.__name__}")
         if parser.log_matches_format_and_client(log_text):
             results = parser.parse(log_text)
             if results:

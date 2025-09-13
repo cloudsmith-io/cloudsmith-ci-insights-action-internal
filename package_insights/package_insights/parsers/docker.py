@@ -1,5 +1,9 @@
 import re
-from package_insights.parsers import BaseFormatClientParser
+from package_insights.parsers import (
+    BaseFormatClientParser,
+    NpmParser,
+    PythonPipParser,
+)
 
 
 class DockerParser(BaseFormatClientParser):
@@ -29,7 +33,6 @@ class DockerParser(BaseFormatClientParser):
         re.IGNORECASE,
     )
 
-    # Match classic, non-BuildKit build failures
     DOCKER_BUILDKIT_BUILD_FAILURE_RE = re.compile(
         r"ERROR: failed to build: failed to solve: docker\.cloudsmith\.io/([^/]+)/([^/]+)/([^:/,\s]+)(?::([^:/,\s]+))?",
         re.IGNORECASE,
@@ -109,7 +112,21 @@ class DockerParser(BaseFormatClientParser):
             if image_key not in seen_images:
                 seen_images.add(image_key)
                 yield (workspace, repo, image_name, tag, self.package_format)
-
+        
+        # Strategy 5: Extract package errors from within Docker build logs
+        # This handles cases where Docker build fails due to package manager errors (pip, npm, etc.)
+        seen_packages = set()
+        
+        # Run other parsers on the log text
+        for parser in [PythonPipParser(), NpmParser()]:
+            print(f"Available parser: {parser.package_format} - {parser.client}")
+            if parser.log_matches_format_and_client(log_text):
+                for workspace, repo, name, version, package_format in parser.extract(log_text):
+                    package_key = (workspace, repo, name, version, package_format)
+                    if package_key not in seen_packages:
+                        seen_packages.add(package_key)
+                    yield (workspace, repo, name, version, package_format)
+        
     def _extract_tag_from_context(self, log_text: str, workspace: str, repo: str, image_name: str) -> str:
         """Try to extract the tag from the surrounding context in the log."""
         # Look for the full image reference with tag in the log

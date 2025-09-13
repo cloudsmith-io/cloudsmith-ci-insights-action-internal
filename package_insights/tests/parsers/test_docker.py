@@ -112,3 +112,35 @@ class TestDockerLogParsing:
             # Should extract nothing
             results = list(parser.extract(log))
             assert len(results) == 0
+
+    def test_docker_build_with_embedded_package_errors(self):
+        """Test Docker parser extracting both Docker image errors AND embedded package manager errors."""
+        log = (
+            "FROM docker.cloudsmith.io/cloudsmith/kmanning-testing/python:3.9\n"
+            "pull access denied for docker.cloudsmith.io/cloudsmith/kmanning-testing/python, "
+            "repository does not exist or may require 'docker login': "
+            "denied: requested access to the resource is denied: Package is quarantined\n"
+            "RUN pip install requirements\n"
+            "ERROR: Could not install requirement python-gitlab==3.1.1 from https://dl.cloudsmith.io/public/workspace-name/repository-name/python/python_gitlab-3.1.1-py3-none-any.whl because of HTTP error 403 Client Error: Forbidden for url\n"
+            "npm error 403 403 Forbidden - GET https://npm.cloudsmith.io/ws/repo/xmlbuilder/-/xmlbuilder-11.0.1.tgz - Package is quarantined.\n"
+        )
+        parser = DockerParser()
+        
+        # Should match as it contains error indicators and cloudsmith registry
+        assert parser.log_matches_format_and_client(log)
+        
+        # Should extract Docker image + Python package + npm package
+        results = list(parser.extract(log))
+        assert len(results) >= 3
+        
+        # Should find the Docker image
+        docker_expected = ("cloudsmith", "kmanning-testing", "python", "3.9", "docker")
+        assert docker_expected in results
+        
+        # Should find the Python package
+        python_expected = ("workspace-name", "repository-name", "python-gitlab", "3.1.1", "python")
+        assert python_expected in results
+        
+        # Should find the npm package
+        npm_expected = ("ws", "repo", "xmlbuilder", "11.0.1", "npm")
+        assert npm_expected in results

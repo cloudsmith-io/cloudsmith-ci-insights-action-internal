@@ -74,7 +74,7 @@ class PythonPipParser(BaseFormatClientParser):
                     _, wheel_ver = art2.groups()
                     ver = wheel_ver
             if ver:
-                yield (workspace, repo, pkg, ver)
+                yield (workspace, repo, pkg, ver, self.package_format)
                 matched = True
         if matched:
             return
@@ -82,7 +82,7 @@ class PythonPipParser(BaseFormatClientParser):
         # Fallback: artifact URLs
         for m in LOG_403_TARBALL_URL_RE.finditer(log_text):
             ns, rp, pkg, ver = m.groups()
-            yield (ns, rp, pkg, ver)
+            yield (ns, rp, pkg, ver, self.package_format)
 
     def normalise_name(self, name: str) -> str:
         # Keep original requested form (hyphens) if present; ensure underscores from artifact names

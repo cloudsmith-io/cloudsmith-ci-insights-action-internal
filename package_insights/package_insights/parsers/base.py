@@ -26,10 +26,10 @@ class BaseFormatClientParser:
     def parse(self, log_text: str):
         seen = set()
         results = []
-        for workspace, repo, name, version, package_format, client in self.extract(log_text):
+        for workspace, repo, name, version, package_format in self.extract(log_text):
             normalised_name = self.normalise_name(name)
             normalised_version = self.normalise_version(version)
-            tup = (workspace, repo, normalised_name, normalised_version, package_format, client)
+            tup = (workspace, repo, normalised_name, normalised_version, package_format)
             if tup not in seen:
                 seen.add(tup)
                 results.append(tup)

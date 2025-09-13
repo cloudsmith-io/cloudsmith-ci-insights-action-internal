@@ -28,7 +28,7 @@ class TestDockerLogParsing:
         assert len(results) >= 1
         
         # Should find the mariadb image with specific tag
-        expected = ("cloudsmith", "kmanning-testing", "mariadb", "11.2.3")
+        expected = ("cloudsmith", "kmanning-testing", "mariadb", "11.2.3", "docker")
         assert expected in results
 
     def test_docker_non_buildkit_from_failure(self):
@@ -49,7 +49,7 @@ class TestDockerLogParsing:
         assert len(results) >= 1
         
         # Should find the mariadb image with specific tag from the FROM line
-        expected = ("cloudsmith", "kmanning-testing", "mariadb", "11.2.3")
+        expected = ("cloudsmith", "kmanning-testing", "mariadb", "11.2.3", "docker")
         assert expected in results
 
     def test_pull_access_denied_with_quarantine(self):
@@ -69,7 +69,7 @@ class TestDockerLogParsing:
         assert len(results) >= 1
         
         # Should find the mariadb image (tag should default to latest since not specified in error)
-        expected = ("cloudsmith", "kmanning-testing", "mariadb", "latest")
+        expected = ("cloudsmith", "kmanning-testing", "mariadb", "latest", "docker")
         assert expected in results
 
     def test_combined_log_with_multiple_errors(self):
@@ -92,7 +92,7 @@ class TestDockerLogParsing:
         assert len(results) >= 1
         
         # Should find the mariadb image with the specific tag (11.2.3)
-        expected = ("cloudsmith", "kmanning-testing", "mariadb", "11.2.3")
+        expected = ("cloudsmith", "kmanning-testing", "mariadb", "11.2.3", "docker")
         assert expected in results
 
     def test_non_cloudsmith_registry_does_not_match(self):

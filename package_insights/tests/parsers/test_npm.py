@@ -18,8 +18,8 @@ class TestNpmLogParsing:
             "npm error 403 403 Forbidden - GET https://npm.cloudsmith.io/workspace-name/repository-name/xmlbuilder/-/xmlbuilder-11.0.1.tgz - Package is quarantined.\n"
         )
         matches = parse_logs_for_all_details(log)
-        assert ("workspace-name", "repository-name", "xml2js", "0.6.2") in matches
-        assert ("workspace-name", "repository-name", "jmespath", "0.16.0") in matches
+        assert ("workspace-name", "repository-name", "xml2js", "0.6.2", "npm") in matches
+        assert ("workspace-name", "repository-name", "jmespath", "0.16.0", "npm") in matches
 
     def test_parse_npm_error_direct_quarantine_line(self):
         log = (
@@ -27,7 +27,7 @@ class TestNpmLogParsing:
             "npm error 403 403 Forbidden - GET https://npm.cloudsmith.io/workspace-name/repository-name/xmlbuilder/-/xmlbuilder-11.0.1.tgz - Package is quarantined.\n"
         )
         matches = parse_logs_for_all_details(log)
-        assert matches[0] == ("workspace-name", "repository-name", "xmlbuilder", "11.0.1")
+        assert matches[0] == ("workspace-name", "repository-name", "xmlbuilder", "11.0.1", "npm")
 
     def test_parse_npm_error_signed_line(self):
         log = (
@@ -35,7 +35,7 @@ class TestNpmLogParsing:
             "npm error 403 403 Forbidden - GET https://dl.cloudsmith.io/signed/workspace-name/repository-name/upstream/filename/npm/vary/vary-1.1.2.tgz?created=1&expires=2\n"
         )
         matches = parse_logs_for_all_details(log)
-        assert matches[0] == ("workspace-name", "repository-name", "vary", "1.1.2")
+        assert matches[0] == ("workspace-name", "repository-name", "vary", "1.1.2", "npm")
 
     def test_parse_multiple_npm_direct_fetch_lines(self):
         log = (
@@ -44,9 +44,9 @@ class TestNpmLogParsing:
             "npm http fetch GET 403 https://npm.cloudsmith.io/workspace-name/repository-name/url/-/url-0.10.3.tgz 12ms (cache skip)\n"
         )
         matches = parse_logs_for_all_details(log)
-        assert ("workspace-name", "repository-name", "xmlbuilder", "11.0.1") in matches
-        assert ("workspace-name", "repository-name", "querystring", "0.2.0") in matches
-        assert ("workspace-name", "repository-name", "url", "0.10.3") in matches
+        assert ("workspace-name", "repository-name", "xmlbuilder", "11.0.1", "npm") in matches
+        assert ("workspace-name", "repository-name", "querystring", "0.2.0", "npm") in matches
+        assert ("workspace-name", "repository-name", "url", "0.10.3", "npm") in matches
 
     def test_parse_npm_detection_no_match_returns_empty(self):
         # Contains 'npm ' and '403' to trigger detection, but no recognized patterns
@@ -62,4 +62,4 @@ class TestNpmLogParsing:
             "npm http fetch GET 403 https://dl.cloudsmith.io/signed/wsA/repoA/upstream/x/npm/dup/dup-0.1.0.tgz?created=1&expires=2 11ms\n"  # duplicate
         )
         matches = parse_logs_for_all_details(log)
-        assert matches == [("wsA", "repoA", "dup", "0.1.0")]
+        assert matches == [("wsA", "repoA", "dup", "0.1.0", "npm")]

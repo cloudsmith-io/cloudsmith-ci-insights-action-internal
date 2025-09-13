@@ -157,12 +157,14 @@ def find_package(workspace: str, repo: str, headers: dict, name: str, version: O
             packages_iter = packages
 
         for pkg in packages_iter:
-            print(pkg["tags"])
             if package_format == "docker":
-                if version in pkg["tags"]["version"]:
+                # For Docker packages, check if tags field exists and matches
+                if "tags" in pkg and version in pkg["tags"].get("version", []):
                     return pkg
-            if pkg.get('display_name') == name and (version is None or pkg.get('version') == version):
-                return pkg
+            else:
+                # For non-Docker packages (Python, npm), use standard matching
+                if pkg.get('display_name') == name and (version is None or pkg.get('version') == version):
+                    return pkg
 
         if total_pages is None:
             total_header = resp.headers.get('x-pagination-pagetotal')

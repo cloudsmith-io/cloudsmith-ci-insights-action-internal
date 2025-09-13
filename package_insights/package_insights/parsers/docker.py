@@ -67,7 +67,6 @@ class DockerParser(BaseFormatClientParser):
         return has_cloudsmith_registry and has_failure
 
     def extract(self, log_text: str):
-        print("extract called")
         seen_images = set()
         
         # Strategy 1: Extract from non-BuildKit build failures (FROM + pull access denied)
@@ -94,7 +93,7 @@ class DockerParser(BaseFormatClientParser):
         for match in self.DOCKER_PULL_ACCESS_DENIED_RE.finditer(log_text):
             workspace, repo, image_name = match.groups()
             # Try to find the tag from context
-            tag = self._extract_tag_from_context(log_text, workspace, repo, image_name, self.package_format)
+            tag = self._extract_tag_from_context(log_text, workspace, repo, image_name)
             
             image_key = (workspace, repo, image_name, tag)
             if image_key not in seen_images:

@@ -130,7 +130,7 @@ def package_insights(log, follow_up):
 
     # Track whether any quarantined package exists to triggered an exit code after loop.
     quarantined_detected = False
-    for workspace, repo, package_name, package_version, package_format, client in matches:
+    for workspace, repo, package_name, package_version, package_format in matches:
 
         match = find_package(workspace, repo, headers, package_name, package_version, package_format)
         if match is None:
